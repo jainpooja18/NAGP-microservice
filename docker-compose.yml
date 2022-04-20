@@ -1,0 +1,107 @@
+version: "2"
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    environment:
+        - RABBITMQ_DEFAULT_USER=myuser
+        - RABBITMQ_DEFAULT_PASS=mypassword
+    networks:
+        - myapinetwork  
+  urbanclap-serviceDiscovery:
+    container_name: urbanclap-serviceDiscovery
+    build:
+        context: urbanclap-serviceDiscovery
+        dockerfile: Dockerfile
+    image: urbanclap-servicediscovery:latest
+    ports:
+        - 8761:8761
+    networks:
+        - myapinetwork
+  urbanclap-apigateway:
+    container_name: urbanclap-apigateway
+    build:
+        context: urbanclap-apigateway
+        dockerfile: Dockerfile
+    image: urbanclap-apigateway:latest
+    ports:
+        - 8080:8080
+    depends_on:
+      - "urbanclap-serviceDiscovery"
+    networks:
+      - myapinetwork
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://urbanclap-serviceDiscovery:8761/eureka
+  urbanclap-booking:
+    container_name: urbanclap-booking
+    build:
+        context: urbanclap-booking
+        dockerfile: Dockerfile
+    image: urbanclap-booking:latest
+    ports:
+        - 8082:8082
+    depends_on:
+      - "urbanclap-serviceDiscovery"
+      - "rabbitmq"
+    networks:
+      - myapinetwork
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE= http://urbanclap-serviceDiscovery:8761/eureka
+  urbanclap-login:
+    container_name: urbanclap-login
+    build:
+        context: urbanclap-login
+        dockerfile: Dockerfile
+    image: urbanclap-login:latest
+    ports:
+        - 8081:8081
+    networks:
+      - myapinetwork
+  urbanclap-payment:
+    container_name: urbanclap-payment
+    build:
+        context: urbanclap-payment
+        dockerfile: Dockerfile
+    image: urbanclap-payment:latest
+    ports:
+        - 8083:8083
+    depends_on:
+      - "urbanclap-serviceDiscovery"
+    networks:
+      - myapinetwork
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://urbanclap-serviceDiscovery:8761/eureka
+  urbanclap-serviceProvider1:
+    container_name: urbanclap-serviceProvider1
+    build:
+        context: urbanclap-serviceProvider1
+        dockerfile: Dockerfile
+    image: urbanclap-serviceprovider1:latest
+    ports:
+        - 8084:8084
+    depends_on:
+      - "urbanclap-serviceDiscovery"
+    networks:
+      - myapinetwork
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://urbanclap-serviceDiscovery:8761/eureka
+  urbanclap-serviceProvider2:
+    container_name: urbanclap-serviceProvider2
+    build:
+        context: urbanclap-serviceProvider2
+        dockerfile: Dockerfile
+    image: urbanclap-serviceprovider2:latest
+    ports:
+        - 8085:8085
+    depends_on:
+      - "urbanclap-serviceDiscovery"
+    networks:
+      - myapinetwork
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://urbanclap-serviceDiscovery:8761/eureka
+      
+networks:
+    myapinetwork:
